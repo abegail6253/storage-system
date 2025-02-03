@@ -1,0 +1,147 @@
+<div class="files-list-container">
+  <h2>Uploaded Files</h2>
+
+  <!-- Search, Sort, and Filter in One Row -->
+  <div class="top-controls">
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <label for="searchInput">Search Files:</label>
+      <input id="searchInput" type="text" [(ngModel)]="searchQuery" (input)="searchFiles()" placeholder="Search by file name">
+    </div>
+
+    <!-- Sort Options -->
+    <div class="sort-options">
+      <label>Sort By:</label>
+      <select [(ngModel)]="sortBy" (change)="sortFiles()">
+        <option value="date">Date</option>
+        <option value="size">File Size</option>
+        <option value="name">Name</option>
+      </select>
+    </div>
+
+    <!-- Toggle Sort Order -->
+    <div class="sort-order-toggle">
+      <button (click)="toggleSortOrder()">
+        {{ sortOrder === 'asc' ? 'Ascending' : 'Descending' }}
+      </button>
+    </div>
+
+    <!-- Filter by File Type -->
+    <div class="file-type-filter">
+      <label>Filter By:</label>
+      <select [(ngModel)]="fileType" (change)="filterByType()">
+        <option value="">All</option>
+        <option value="application/pdf">PDF</option>
+        <option value="application/msword">Word</option>
+        <option value="video/*">Videos</option>
+        <option value="image/jpeg">JPEG Image</option>
+        <option value="image/png">PNG Image</option>
+        <option value="application/zip">ZIP</option> <!-- Added ZIP filter -->
+      </select>
+    </div>
+  </div>
+
+  <!-- File Statistics -->
+  <div class="file-statistics">
+    <p><strong>Total Files:</strong> {{ statistics.totalFiles }}</p>
+    <p><strong>Total Size:</strong> {{ statistics.totalSizeMB }} MB ({{ statistics.totalSize }} bytes)</p>
+  </div>
+
+  <!-- View Toggle -->
+  <div class="view-toggle">
+    <button (click)="toggleView('list')" [class.active]="viewMode === 'list'">List View</button>
+    <button (click)="toggleView('grid')" [class.active]="viewMode === 'grid'">Grid View</button>
+  </div>
+
+  <!-- File List or Grid -->
+  <div *ngIf="filteredFiles.length; else noFiles">
+    <div [ngClass]="viewMode">
+      <div *ngFor="let file of filteredFiles" class="file-item" [ngClass]="getFileIconClass(file)">
+        
+        <!-- Grid View - clipped filename with tooltip -->
+        <div *ngIf="viewMode === 'grid'" class="filename-actions-container">
+          <p>
+            <span class="filename-container" [title]="file.filename">{{ file.filename | slice:0:20 }}...</span>
+          </p>
+
+          <div class="more-options-container">
+            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More options">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- List View - filename, size, filetype -->
+        <div *ngIf="viewMode === 'list'" class="filename-actions-container">
+          <p><strong>Filename:</strong> {{ file.filename }}</p>
+          <p><strong>Size:</strong> {{ getFormattedFileSize(file.size) }}</p>
+          
+          <!-- File Type Icon -->
+          <div class="file-type-icon">
+            <mat-icon *ngIf="isPdf(file)">picture_as_pdf</mat-icon>
+            <mat-icon *ngIf="isWord(file)">description</mat-icon>
+            <mat-icon *ngIf="isVideo(file)">video_library</mat-icon>
+            <mat-icon *ngIf="isExcel(file)">grid_on</mat-icon>
+            <mat-icon *ngIf="isImage(file)">image</mat-icon>
+            <mat-icon *ngIf="isZip(file)">archive</mat-icon> <!-- Added ZIP icon -->
+            <mat-icon *ngIf="isOther(file)">insert_drive_file</mat-icon>
+          </div>
+
+          <div class="more-options-container">
+            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More options">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- More options -->
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="toggleRenameMode(file)">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </button>
+          <button mat-menu-item (click)="deleteFile(file.filename)">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+          </button>
+          <button mat-menu-item (click)="downloadFile(file.filename)">
+            <mat-icon>download</mat-icon>
+            <span>Download</span>
+          </button>
+        </mat-menu>
+
+        <!-- Rename Input Field -->
+        <div *ngIf="file.renameMode">
+          <input type="text" [(ngModel)]="file.newName" placeholder="Enter new name">
+          <button (click)="renameFile(file.filename, file.newName)">
+            Rename
+          </button>
+        </div>
+
+        <!-- Preview Section (only for Grid View) -->
+        <div *ngIf="viewMode === 'grid'">
+          <div *ngIf="isImage(file)">
+            <img [src]="getImageUrl(file)" alt="Image Preview" class="file-preview">
+          </div>
+
+          <!-- File Type Icons Below Filename (except for Images) -->
+          <ng-container *ngIf="viewMode === 'grid' && (isPdf(file) || isExcel(file) || isWord(file) || isVideo(file) || isZip(file) || isOther(file))">
+            <div class="file-type-icon" style="width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; margin-top: 15px;">
+              <mat-icon *ngIf="isPdf(file)">picture_as_pdf</mat-icon>
+              <mat-icon *ngIf="isWord(file)">description</mat-icon>
+              <mat-icon *ngIf="isVideo(file)">video_library</mat-icon>
+              <mat-icon *ngIf="isExcel(file)">grid_on</mat-icon>
+              <mat-icon *ngIf="isZip(file)">archive</mat-icon>
+              <mat-icon *ngIf="isOther(file)">insert_drive_file</mat-icon>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Files Message -->
+  <ng-template #noFiles>
+    <p>No files uploaded yet.</p>
+  </ng-template>
+</div>

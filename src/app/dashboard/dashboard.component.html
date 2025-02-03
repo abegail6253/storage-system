@@ -1,0 +1,53 @@
+<div class="upload-container" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+  <h2>
+    Upload Files
+    <span class="material-icons">upload</span>
+  </h2>
+
+  <!-- File input for manual selection -->
+  <input type="file" #fileInput (change)="onFilesSelected($event)" multiple />
+  <p>Or drag and drop your files here</p>
+
+  <!-- Selected files list -->
+  <div *ngIf="uploadedFiles.length">
+    <h3>Selected Files</h3>
+    <ul>
+      <li *ngFor="let file of uploadedFiles; let i = index" class="file-item">
+        <!-- File preview -->
+        <div *ngIf="filePreviews[i]?.preview" class="file-preview">
+          <img 
+            *ngIf="file.type.startsWith('image')" 
+            [src]="filePreviews[i].preview" 
+            alt="Preview of {{ file.name }}"
+          />
+          <img 
+            *ngIf="file.type === 'application/pdf'" 
+            src="assets/pdf-icon.png" 
+            alt="PDF icon for {{ file.name }}"
+          />
+        </div>
+        <span>{{ file.name }}</span>
+
+        <!-- Progress bar for each file -->
+        <div *ngIf="fileProgress[file.name] !== undefined" class="file-progress-container">
+          <p>{{ fileProgress[file.name] < 100 ? 'Uploading...' : 'Upload Complete' }}</p>
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" [style.width.%]="fileProgress[file.name]">
+              {{ fileProgress[file.name] }}%
+            </div>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Upload button, shown only after file selection -->
+  <div *ngIf="uploadedFiles.length > 0">
+    <button (click)="uploadFiles()" [disabled]="uploading">Upload</button>
+  </div>
+
+  <!-- Display uploaded file name after success -->
+  <div *ngIf="uploadedFileName">
+    <p>{{ uploadCompleteMessage }}{{ uploadedFileName }}</p>
+  </div>
+</div>

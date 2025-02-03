@@ -1,0 +1,79 @@
+.sidenav-container {
+  height: 100%;
+}
+
+.mat-sidenav {
+  border-radius: 0px !important;
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  border-right: 2px solid #1a2431; /* Sidebar border */
+}
+
+.fixed-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.content {
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+mat-toolbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 2;
+  background-color: #1a2431; /* Navbar background color */
+  color: white; /* Navbar text color */
+  
+}
+mat-toolbar button{
+  color: white; /* Navbar text color */
+}
+
+
+
+mat-sidenav {
+  width: 150px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+ 
+/* Highlight the active sidebar link */
+.active-link {
+  background-color: #2196f3; /* Your highlight color */
+  color: white !important; /* Text color for active link */
+
+}
+
+/* Additional styling for mat-list-item */
+mat-list-item {
+  transition: background-color 0.3s ease;
+  color: white;
+}
+
+mat-list-item:hover {
+  background-color: #f8bbd0; /* Hover effect */
+}
+
+mat-toolbar span {
+  font-size: 18px;
+  font-weight: bold;
+  color: white; /* Changed text color to white */
+  margin-right: 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+mat-toolbar span.user-email {
+  font-size: 16px;
+  font-weight: normal;
+  color: white; /* Changed user email text color to white */
+  text-transform: lowercase;
+  margin-right: 15px;
+}

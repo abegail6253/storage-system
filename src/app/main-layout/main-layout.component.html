@@ -1,0 +1,34 @@
+<mat-sidenav-container class="sidenav-container">
+  <!-- Sidebar -->
+  <mat-sidenav #sidenav mode="side" opened class="modern-sidenav">
+    <mat-nav-list>
+      <!-- Sidebar links -->
+      <a mat-list-item routerLink="/files-list" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }" (click)="sidenav.close()" >My Files</a>
+      <a mat-list-item color="primary" routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }" (click)="sidenav.close()">Dashboard</a>
+    </mat-nav-list>
+  </mat-sidenav>
+  
+
+  <!-- Main Content -->
+  <mat-sidenav-content>
+    <!-- Navbar -->
+    <mat-toolbar color="primary" class="fixed-header modern-toolbar">
+      <button mat-icon-button (click)="sidenav.toggle()" aria-label="Toggle sidenav">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>My App</span>
+      <span class="spacer"></span>
+      
+      <!-- User's email -->
+      <span *ngIf="userEmail" class="user-email">Welcome, {{ userEmail }}</span>
+
+      <!-- Logout Button -->
+      <button mat-button (click)="logout()"  >Logout</button>
+    </mat-toolbar>
+
+    <!-- Content Area -->
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

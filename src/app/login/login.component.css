@@ -1,0 +1,127 @@
+/* High-tech, modern styling for the login form container */
+.login-container {
+  width: 400px;
+  margin: 100px auto;
+  padding: 40px;
+  background: linear-gradient(135deg, #0d0d0d, #333);
+  border-radius: 15px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  color: #ffffff;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+  overflow: hidden;
+  animation: glowPulse 2s infinite alternate;
+}
+
+/* Animated glowing pulse effect for modern look */
+@keyframes glowPulse {
+  from {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 123, 255, 0.6);
+  }
+  to {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 50px rgba(0, 123, 255, 0.9);
+  }
+}
+
+/* Form title styling */
+h2 {
+  font-size: 30px;
+  margin-bottom: 30px;
+  color: #007bff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Form input styling */
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 15px;
+  margin: 15px 0;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+  outline: none;
+}
+
+/* Glowing input focus */
+input[type="text"]:focus, input[type="password"]:focus {
+  border: 2px solid #007bff;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 123, 255, 0.7);
+}
+
+/* Button styling */
+button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: background 0.4s ease-in-out, transform 0.3s ease;
+}
+
+/* Button hover effect */
+button:hover {
+  background: linear-gradient(135deg, #0056b3, #003580);
+  transform: scale(1.05);
+}
+
+/* Disabled button styling */
+button[disabled] {
+  background: #444;
+  cursor: not-allowed;
+}
+
+/* Error message styling */
+.error {
+  color: #ff4d4d;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+/* Subtle fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-container {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Optional futuristic overlay */
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+  transform: rotate(30deg);
+  animation: rotate 6s linear infinite;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+/* Slow rotation effect for futuristic design */
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.login-container > * {
+  position: relative;
+  z-index: 1;
+}
