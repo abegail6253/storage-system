@@ -21,6 +21,7 @@ interface File {
   viewMode: string;
   searchQuery: string;
   
+  
 }
 
 

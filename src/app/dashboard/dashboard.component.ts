@@ -1,7 +1,14 @@
 import { ChangeDetectorRef, Component, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../file.service'; // Ensure the correct path is used
+
+// Define an interface for UploadedFile
+interface UploadedFile {
+  filename: string;
+  path: string;
+  uploadedAt: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -17,14 +24,17 @@ export class DashboardComponent implements AfterViewInit {
   filePreviews: { file: File; preview: string | ArrayBuffer | null }[] = [];
   progress: number = 0;
   uploading: boolean = false;
-  files: { filename: string, path: string, uploadedAt: string }[] = [];
+  files: UploadedFile[] = [];
+
+  // New property to track the file being uploaded
+  currentUploadingIndex: number = -1;
 
   // New property to track file upload progress
   fileProgress: { [key: string]: number } = {};
 
   uploadedFileName: string = ''; // To track the uploaded file name
   uploadCompleteMessage: string = ''; // To track the upload completion message
-
+  
   constructor(private http: HttpClient, private fileService: FileService, private cdRef: ChangeDetectorRef) {
     this.fetchUploadedFiles();
   }
@@ -33,12 +43,13 @@ export class DashboardComponent implements AfterViewInit {
     // No usage chart initialization
   }
 
+  // Update the fetchUploadedFiles method with type safety
   fetchUploadedFiles(): void {
-    this.http.get<any>('http://localhost:3000/files').subscribe(
-      (data: { files: { filename: string, path: string, uploadedAt: string }[] }) => {
+    this.http.get<{ files: UploadedFile[] }>('http://localhost:3000/files').subscribe(
+      (data) => {
         console.log(data); // Log the fetched data for debugging
         this.files = this.filterFilesUploadedToday(data.files);
-        this.cdRef.detectChanges(); // Ensure change detection
+        this.cdRef.detectChanges(); // Ensure change detection is called
       },
       (error) => {
         console.error('Error fetching files:', error);
@@ -46,7 +57,7 @@ export class DashboardComponent implements AfterViewInit {
     );
   }
 
-  filterFilesUploadedToday(files: { filename: string, path: string, uploadedAt: string }[]): { filename: string, path: string, uploadedAt: string }[] {
+  filterFilesUploadedToday(files: UploadedFile[]): UploadedFile[] {
     const today = new Date();
     const startOfToday = new Date(today.setHours(0, 0, 0, 0));  // Set time to 00:00:00
     const endOfToday = new Date(today.setHours(23, 59, 59, 999)); // Set time to 23:59:59
@@ -59,20 +70,18 @@ export class DashboardComponent implements AfterViewInit {
 
   onFilesSelected(event: any): void {
     const files: File[] = Array.from(event.target.files);
-    this.uploadedFiles.push(...files);
-    files.forEach((file) => this.generatePreview(file));
-    this.uploadedFileName = ''; // Reset the file name when a new file is selected
-    this.uploadCompleteMessage = ''; // Reset the message
+    this.uploadedFiles.push(...files); // Add new files to existing uploadedFiles
+    files.forEach((file) => this.generatePreview(file)); // Generate preview for new files
+    this.cdRef.detectChanges(); // Trigger change detection to update the view
   }
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
     if (event.dataTransfer?.files) {
       const files: File[] = Array.from(event.dataTransfer.files);
-      this.uploadedFiles.push(...files);
-      files.forEach((file) => this.generatePreview(file));
-      this.uploadedFileName = ''; // Reset the file name when a new file is selected
-      this.uploadCompleteMessage = ''; // Reset the message
+      this.uploadedFiles.push(...files); // Add new files to existing uploadedFiles
+      files.forEach((file) => this.generatePreview(file)); // Generate preview for new files
+      this.cdRef.detectChanges(); // Trigger change detection to update the view
     }
   }
 
@@ -85,80 +94,83 @@ export class DashboardComponent implements AfterViewInit {
     if (file.type.startsWith('image')) {
       reader.onload = () => {
         this.filePreviews.push({ file, preview: reader.result });
+        this.cdRef.detectChanges();  // Update UI after preview is generated
       };
       reader.readAsDataURL(file);
     } else if (file.type === 'application/pdf') {
       this.filePreviews.push({ file, preview: 'assets/pdf-icon.png' });
+      this.cdRef.detectChanges();  // Ensure the preview is updated
     } else {
       this.filePreviews.push({ file, preview: null });
+      this.cdRef.detectChanges();
     }
   }
 
+  // Upload files one by one
   uploadFiles(): void {
-    const formData = new FormData();
-    this.uploadedFiles.forEach((file) => {
-      formData.append('files', file, file.name);
-      this.fileProgress[file.name] = 0; // Initialize progress for each file
-    });
+    if (this.uploadedFiles.length === 0) return;
   
     this.uploading = true;
     this.filePreviews = [];
-  
+    this.uploadNextFile(0);  // Start with the first file
+  }
+
+  // Upload the next file in the queue
+  uploadedFileNames: string[] = []; // Array to hold the names of all uploaded files
+
+  uploadNextFile(index: number): void {
+    if (index >= this.uploadedFiles.length) {
+      this.uploading = false;
+      this.fetchUploadedFiles();  // Refresh the list of uploaded files
+      this.resetUpload();  // Reset state after all files are uploaded
+      return;
+    }
+
+    const file = this.uploadedFiles[index];
+    const formData = new FormData();
+    formData.append('files', file, file.name);  // Ensure the key 'files' matches what the backend expects
+    this.fileProgress[file.name] = 0;  // Initialize file progress for the new file
+
+    this.currentUploadingIndex = index;  // Track the index of the current file
+
     this.http.post('http://localhost:3000/upload', formData, {
       headers: new HttpHeaders(),
       observe: 'events',
       reportProgress: true
     }).subscribe(
-      (event: any) => {
-        switch (event.type) {
-          case HttpEventType.UploadProgress:
-            if (event.total) {
-              const progress = Math.round(100 * event.loaded / event.total);
-              console.log(`Progress: ${progress}%`);
-  
-              // Update individual file progress
-              if (event.body && event.body.filename) {
-                const fileName = event.body.filename;
-                this.fileProgress[fileName] = progress;
-                console.log(`File: ${fileName}, Progress: ${progress}%`);
-              } else {
-                // If no filename is returned, you can use the file name from the formData itself
-                this.uploadedFiles.forEach((file) => {
-                  if (event.loaded && event.total) {
-                    const progress = Math.round(100 * event.loaded / event.total);
-                    this.fileProgress[file.name] = progress;
-                    this.cdRef.detectChanges();  // Ensure progress is detected in the view
-                  }
-                });
-              }
-            }
-            break;
-          case HttpEventType.Response:
-            const uploadedFileNames = this.uploadedFiles.map(file => file.name).join(', ');
-            this.uploadedFileName = uploadedFileNames;
-            this.uploadCompleteMessage = `Upload complete! Files: ${uploadedFileNames}`;
-            this.fetchUploadedFiles();  // Refresh the list of uploaded files
-            this.resetUpload();  // Reset upload state for future uploads
-            break;
+      (event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          if (event.total) {
+            const progress = Math.round(100 * event.loaded / event.total);
+            this.fileProgress[file.name] = progress;
+            this.cdRef.detectChanges();  // Update UI for current file
+          }
+        } else if (event.type === HttpEventType.Response) {
+          const response = event.body as { files: { filename: string }[] };  // Typing the response correctly
+          console.log(`File ${file.name} uploaded successfully`);
+
+          // Extract filenames from response
+          const uploadedFileNames = response.files.map(f => f.filename) || [];
+          this.uploadedFileNames.push(...uploadedFileNames);  // Store the server's response filenames
+
+          this.filePreviews.splice(index, 1);  // Remove file preview after successful upload
+          this.uploadNextFile(index + 1);  // Continue uploading the next file
         }
       },
-      (error: any) => {
-        console.error('Upload failed:', error);
-        this.resetUpload();  // Reset upload state in case of error
+      (error) => {
+        console.error('Upload error:', error);
+        this.uploadNextFile(index + 1);  // Continue uploading the next file even if there's an error
       }
     );
   }
-  
-  
+
+  // Reset the upload state
   resetUpload(): void {
-    this.uploading = false;
-    this.fileProgress = {};  // Reset individual file progress
-    this.uploadedFiles = [];  // Clear the uploaded files
-    this.filePreviews = [];  // Clear file previews
-    
-    // Clear file input field if it exists
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
-    }
+    this.uploadedFiles = [];
+    this.filePreviews = [];
+    this.fileProgress = {};
+    this.uploadedFileName = '';
+    this.uploadCompleteMessage = '';
+    this.cdRef.detectChanges();
   }
 }

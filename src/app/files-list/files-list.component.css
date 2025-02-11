@@ -262,6 +262,23 @@ h2 {
   text-overflow: ellipsis;
   position: relative; /* To allow the tooltip to be positioned relative to this container */
 }
+.file-info {
+  margin-top: 10px;
+  color: #666;
+}
+.file-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+}
+
+.file-size, .file-date {
+  font-size: 14px;
+  color: #000000;
+  margin: 0;
+  
+}
 
 /* Tooltip when hovering over the filename */
 .filename-container:hover::after {
@@ -289,19 +306,32 @@ h2 {
 .filename-actions-container {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* Ensures vertical alignment */
+  align-items: center; /* vertically centers the content */
+}
+.file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .filename-container {
-  flex-grow: 1; /* Makes the filename container take available space */
+  flex-grow: 1;
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .more-options-container {
-  margin-left: 10px; /* Add some space between filename and the button */
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
 }
+.grid-view-icon mat-icon {
+  font-size: 48px; /* Larger icons for grid view */
+}
+
+
 
 /* Updated style for more options button (three dots) */
 .more-options-btn {
@@ -312,4 +342,29 @@ h2 {
   display: flex;
   justify-content: flex-end; /* Ensure it's aligned to the right */
 }
+/* Sort Order Toggle */
+.sort-order-toggle .small-button {
+  padding: 6px 10px; /* Smaller padding for compact design */
+  font-size: 14px; /* Small font size */
+  border-radius: 4px; /* Softer rounded edges */
+  background-color: #0078d4; /* Matching the theme color */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.sort-order-toggle .small-button:hover {
+  background-color: #005fa3; /* Darker color on hover */
+}
+
+.sort-order-toggle .sort-icon {
+  font-size: 18px; /* Small icon size */
+}
+
+
+
 
