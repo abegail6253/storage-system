@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, ViewChild, ElementRef, AfterViewInit } fr
 import { HttpClient, HttpHeaders, HttpEventType } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../file.service'; // Ensure the correct path is used
+import { MatIconModule } from '@angular/material/icon';
 
 // Define an interface for UploadedFile
 interface UploadedFile {
@@ -13,7 +14,7 @@ interface UploadedFile {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
@@ -26,6 +27,26 @@ export class DashboardComponent implements AfterViewInit {
   uploading: boolean = false;
   files: UploadedFile[] = [];
 
+  isPdf(file: File): boolean {
+    return file.type === 'application/pdf';
+  }
+
+  isWord(file: File): boolean {
+    return file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+
+  isVideo(file: File): boolean {
+    return file.type.startsWith('video/');
+  }
+
+  isExcel(file: File): boolean {
+    return file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  }
+
+  isZip(file: File): boolean {
+    return file.type === 'application/zip' || file.name.endsWith('.zip');
+  }
+
   // New property to track the file being uploaded
   currentUploadingIndex: number = -1;
 
@@ -33,8 +54,8 @@ export class DashboardComponent implements AfterViewInit {
   fileProgress: { [key: string]: number } = {};
 
   uploadedFileName: string = ''; // To track the uploaded file name
-  uploadCompleteMessage: string = ''; // To track the upload completion message
-  
+  uploadCompleteMessage: string = '';
+
   constructor(private http: HttpClient, private fileService: FileService, private cdRef: ChangeDetectorRef) {
     this.fetchUploadedFiles();
   }
@@ -109,60 +130,74 @@ export class DashboardComponent implements AfterViewInit {
   // Upload files one by one
   uploadFiles(): void {
     if (this.uploadedFiles.length === 0) return;
-  
+
     this.uploading = true;
-    this.filePreviews = [];
+    // Keep filePreviews intact
     this.uploadNextFile(0);  // Start with the first file
-  }
+}
 
-  // Upload the next file in the queue
-  uploadedFileNames: string[] = []; // Array to hold the names of all uploaded files
+// Array to hold the names of all uploaded files
+uploadedFileNames: string[] = [];
 
-  uploadNextFile(index: number): void {
+// Upload the next file in the queue
+uploadNextFile(index: number): void {
     if (index >= this.uploadedFiles.length) {
-      this.uploading = false;
-      this.fetchUploadedFiles();  // Refresh the list of uploaded files
-      this.resetUpload();  // Reset state after all files are uploaded
-      return;
+        this.uploading = false;
+        this.fetchUploadedFiles();
+        this.resetUpload();
+        // Optionally reset after all uploads, but leave previews intact
+        
+        return;
     }
 
     const file = this.uploadedFiles[index];
-    const formData = new FormData();
-    formData.append('files', file, file.name);  // Ensure the key 'files' matches what the backend expects
-    this.fileProgress[file.name] = 0;  // Initialize file progress for the new file
+    this.fileProgress[file.name] = 0;
+    this.currentUploadingIndex = index;
 
-    this.currentUploadingIndex = index;  // Track the index of the current file
+    // Upload the file to the server
+    this.uploadFileToServer(file, index);
+}
+
+// Actual server upload logic for all files
+uploadFileToServer(file: File, index: number): void {
+    const formData = new FormData();
+    formData.append('files', file, file.name);
+    this.fileProgress[file.name] = 0;
+
+    const startTime = Date.now();
 
     this.http.post('http://localhost:3000/upload', formData, {
-      headers: new HttpHeaders(),
-      observe: 'events',
-      reportProgress: true
+        headers: new HttpHeaders(),
+        observe: 'events',
+        reportProgress: true
     }).subscribe(
-      (event) => {
-        if (event.type === HttpEventType.UploadProgress) {
-          if (event.total) {
-            const progress = Math.round(100 * event.loaded / event.total);
-            this.fileProgress[file.name] = progress;
-            this.cdRef.detectChanges();  // Update UI for current file
-          }
-        } else if (event.type === HttpEventType.Response) {
-          const response = event.body as { files: { filename: string }[] };  // Typing the response correctly
-          console.log(`File ${file.name} uploaded successfully`);
+        (event) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+                const progress = Math.round(100 * event.loaded / event.total);
+                this.fileProgress[file.name] = progress;
+                this.cdRef.detectChanges();
+            } else if (event.type === HttpEventType.Response) {
+                const response = event.body as { files: { filename: string }[] };
+                const uploadedFileNames = response.files.map(f => f.filename) || [];
+                this.uploadedFileNames.push(...uploadedFileNames);
 
-          // Extract filenames from response
-          const uploadedFileNames = response.files.map(f => f.filename) || [];
-          this.uploadedFileNames.push(...uploadedFileNames);  // Store the server's response filenames
+                // Ensure a minimum display time for the progress bar
+                const elapsedTime = Date.now() - startTime;
+                const minimumDisplayTime = 500; // 500 ms minimum display time
 
-          this.filePreviews.splice(index, 1);  // Remove file preview after successful upload
-          this.uploadNextFile(index + 1);  // Continue uploading the next file
+                setTimeout(() => {
+                    // Do not remove the file preview here; keep it visible
+                    this.uploadNextFile(index + 1);
+                }, Math.max(minimumDisplayTime - elapsedTime, 0));
+            }
+        },
+        (error) => {
+            console.error('Upload error:', error);
+            this.uploadNextFile(index + 1); // Continue with the next file even on error
         }
-      },
-      (error) => {
-        console.error('Upload error:', error);
-        this.uploadNextFile(index + 1);  // Continue uploading the next file even if there's an error
-      }
     );
-  }
+}
+
 
   // Reset the upload state
   resetUpload(): void {

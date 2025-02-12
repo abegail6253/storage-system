@@ -8,37 +8,55 @@
   <input type="file" (change)="onFilesSelected($event)" multiple name="files" #fileInput />
   <p>Or drag and drop your files here</p>
 
-  <!-- Selected files list -->
+  <!-- Selected files table -->
   <div *ngIf="uploadedFiles && uploadedFiles.length > 0">
     <h3>Selected Files</h3>
-    <ul>
-      <li *ngFor="let file of uploadedFiles; let i = index" class="file-item">
-        <!-- File preview -->
-        <div *ngIf="filePreviews[i]?.preview" class="file-preview">
-          <img
-            *ngIf="file.type.startsWith('image/')"
-            [src]="filePreviews[i].preview"
-            [alt]="'Preview of ' + file.name"
-          />
-          <img
-            *ngIf="file.type === 'application/pdf'"
-            src="assets/pdf-icon.png"
-            [alt]="'PDF icon for ' + file.name"
-          />
-        </div>
-        <span>{{ file.name }}</span>
-
-        <!-- Progress bar for each file, only show for the currently uploading file -->
-        <div *ngIf="fileProgress[file.name] !== undefined && currentUploadingIndex === i" class="file-progress-container">
-          <p>{{ fileProgress[file.name] < 100 ? 'Uploading...' : 'Upload Complete' }}</p>
-          <div class="progress">
-            <div class="progress-bar" role="progressbar" [style.width.%]="fileProgress[file.name]">
-              {{ fileProgress[file.name] }}%
+    <table class="file-table">
+      <thead>
+        <tr>
+          <th>Preview</th>
+          <th>File Name</th>
+          <th>File Type</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let file of uploadedFiles; let i = index">
+          <td>
+            <!-- File preview for images -->
+            <div *ngIf="filePreviews[i]?.preview">
+              <img *ngIf="file.type.startsWith('image/')" [src]="filePreviews[i].preview" [alt]="'Preview of ' + file.name" />
             </div>
-          </div>
-        </div>
-      </li>
-    </ul>
+
+            <!-- File type icon for non-image files -->
+            <div class="file-type-icon" *ngIf="!file.type.startsWith('image/')">
+              <mat-icon *ngIf="isPdf(file)" style="color: #2980b9;">picture_as_pdf</mat-icon>
+              <mat-icon *ngIf="isWord(file)" style="color: #2980b9;">description</mat-icon>
+              <mat-icon *ngIf="isVideo(file)" style="color: #2980b9;">video_library</mat-icon>
+              <mat-icon *ngIf="isExcel(file)" style="color: #2980b9;">grid_on</mat-icon>
+              <mat-icon *ngIf="isZip(file)" style="color: #2980b9;">archive</mat-icon>
+            </div>
+          </td>
+          <td>{{ file.name }}</td>
+          <td>{{ file.type }}</td>
+          <td>
+            <!-- Show progress bar or checkmark based on upload progress -->
+            <div *ngIf="fileProgress[file.name] !== undefined" class="progress-container">
+              <div *ngIf="fileProgress[file.name] < 100">
+                <p>Uploading...</p>
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" [style.width.%]="fileProgress[file.name]">{{ fileProgress[file.name] }}%</div>
+                </div>
+              </div>
+              <div *ngIf="fileProgress[file.name] === 100">
+                <!-- Display checkmark when upload is complete -->
+                <mat-icon style="color: #2ecc71; font-size: 24px;">check_circle</mat-icon>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- Upload button, shown only after file selection -->
@@ -47,10 +65,10 @@
   </div>
 
   <!-- Display uploaded file names after success -->
-  <div *ngIf="uploadedFileNames.length > 0">
-    <p>Upload Complete: </p>
-    <ul>
-      <li *ngFor="let name of uploadedFileNames" style="color: white;">{{ name }}</li>
+  <div *ngIf="uploadedFileNames.length > 0" class="uploaded-message-container">
+    <p class="uploaded-message">Upload Complete:</p>
+    <ul class="uploaded-files-list">
+      <li *ngFor="let name of uploadedFileNames">{{ name }}</li>
     </ul>
   </div>
 </div>

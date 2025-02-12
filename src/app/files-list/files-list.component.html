@@ -63,7 +63,7 @@
           <!-- Grid View - Filename and More Options in one row -->
           <div *ngIf="viewMode === 'grid'" class="filename-actions-container">
             <div class="file-header">
-              <span class="filename-container" [title]="file.filename"><strong>Filename:</strong> {{ file.filename | slice:0:20 }}...</span>
+              <span class="filename-container" [title]="file.filename"> {{ file.filename | slice:0:20 }}...</span>
               <div class="more-options-container">
                 <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More options">
                   <mat-icon>more_vert</mat-icon>
@@ -91,7 +91,7 @@
 
         <!-- List View - filename, size, filetype -->
         <div *ngIf="viewMode === 'list'" class="filename-actions-container">
-          <p><strong>Filename:</strong> {{ file.filename }}</p>
+          <p> {{ file.filename }}</p>
           <p><strong>Size:</strong> {{ getFormattedFileSize(file.size) }}</p>
           <p><strong>Date:</strong> {{ file.createdAt | date:'short' }}</p>
 
@@ -151,11 +151,11 @@
           <!-- File Type Icons Below Filename (except for Images) -->
           <ng-container *ngIf="viewMode === 'grid' && (isPdf(file) || isExcel(file) || isWord(file) || isVideo(file) || isZip(file))">
             <div class="file-type-icon" style="width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; margin-top: 15px;">
-              <mat-icon *ngIf="isPdf(file)">picture_as_pdf</mat-icon>
-              <mat-icon *ngIf="isWord(file)">description</mat-icon>
-              <mat-icon *ngIf="isVideo(file)">video_library</mat-icon>
-              <mat-icon *ngIf="isExcel(file)">grid_on</mat-icon>
-              <mat-icon *ngIf="isZip(file)">archive</mat-icon>
+              <mat-icon *ngIf="isPdf(file)"style="font-size: 120px; height: 130px; width: 120px;">picture_as_pdf</mat-icon>
+              <mat-icon *ngIf="isWord(file)"style="font-size: 120px; height: 130px; width: 120px;">description</mat-icon>
+              <mat-icon *ngIf="isVideo(file)"style="font-size: 120px; height: 130px; width: 120px;">video_library</mat-icon>
+              <mat-icon *ngIf="isExcel(file)"style="font-size: 120px; height: 130px; width: 120px;">grid_on</mat-icon>
+              <mat-icon *ngIf="isZip(file)" style="font-size: 120px; height: 130px; width: 120px;">archive</mat-icon>
               
             </div>
             <div class="file-info">
