@@ -9,6 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 
 
+
 // Define an interface for the file
 interface File {
   filename: string;
@@ -20,6 +21,7 @@ interface File {
   newName?: string;
   viewMode: string;
   searchQuery: string;
+  selected?: boolean;
   
   
 }
@@ -29,7 +31,7 @@ interface File {
 @Component({
   selector: 'app-files-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatMenuModule, MatButtonModule, MatIconModule], // <-- Add FormsModule here
+  imports: [CommonModule, FormsModule, MatMenuModule, MatButtonModule, MatIconModule], 
   templateUrl: './files-list.component.html',
   styleUrls: ['./files-list.component.css']
 })
@@ -43,6 +45,8 @@ export class FilesListComponent implements OnInit {
   searchQuery: string = ''; // Make sanitizer public
   viewMode: string = 'list';
   menu: any;
+  selectAllChecked: boolean = false;
+  bulkActionMode = false;
   selectedBulkAction: string = '';
   showCheckboxes: boolean = false;
   showActionsForFile: File | null = null;
@@ -190,6 +194,62 @@ export class FilesListComponent implements OnInit {
     // After toggling, you might want to apply the sorting again
     this.sortFiles();
   }
+
+  toggleBulkActionMode() {
+    this.bulkActionMode = !this.bulkActionMode;
+    // Uncheck the select all checkbox when exiting bulk action mode
+    if (!this.bulkActionMode) {
+      this.selectAllChecked = false;
+      this.files.forEach(file => file.selected = false);
+    }
+  }
+  selectAllFiles(event: any) {
+    const checked = event.target.checked;
+    this.files.forEach(file => file.selected = checked);
+  }
+
+  
+
+  bulkDelete(selectedFiles: File[]) {
+    const filenames = selectedFiles.map(file => file.filename); // Get the array of filenames
+  
+    // Make API call to backend with POST request and filenames in the body
+    this.http.post('http://localhost:3000/files/bulk-delete', { filenames }).subscribe(
+      (response: any) => {
+        console.log('Files deleted successfully:', response.deletedFiles);
+        this.files = this.files.filter(file => !file.selected); // Remove selected files from frontend
+        this.filteredFiles = this.filteredFiles.filter(file => !file.selected); // Update filtered files
+        this.updateStatistics(); // Update statistics after deletion
+      },
+      (error) => {
+        console.error('Error deleting files:', error);
+      }
+    );
+  }
+  
+  bulkDownload() {
+    const selectedFiles = this.filteredFiles.filter(file => file.selected);
+    selectedFiles.forEach(file => {
+      this.downloadFile(file.filename); // Call your existing download logic
+    });
+  }
+
+  confirmBulkDelete() {
+    const selectedFiles = this.files.filter(file => file.selected);
+    if (selectedFiles.length === 0) {
+      alert('No files selected for deletion.');
+      return;
+    }
+  
+    const confirmDelete = confirm(`Are you sure you want to delete ${selectedFiles.length} files?`);
+    if (confirmDelete) {
+      this.bulkDelete(selectedFiles); // Call bulk delete method
+    }
+  }
+  
+  
+
+  
 
   // Function to delete a file
   deleteFile(filename: string) {

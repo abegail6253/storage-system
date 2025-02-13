@@ -37,26 +37,29 @@ h2 {
 }
 
 .view-toggle button {
-  padding: 12px 24px;
-  font-size: 16px;
-  border-radius: 8px;
+  padding: 8px; /* Reduced padding to fit icons */
+  border-radius: 50%; /* Makes the buttons circular */
   border: none;
   background-color: #0078d4;
   color: #fff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; /* Adjust the size of the button */
+  height: 40px;
 }
 
 .view-toggle button.active {
-  background-color: #005fa3;
-  transform: scale(1.05);
+  background-color: #005bb5; /* Active state color */
 }
 
 .view-toggle button:hover {
-  background-color: #005fa3;
-  transform: scale(1.05);
+  background-color: #005bb5; /* Darker on hover */
 }
+
 
 .sort-options, .file-type-filter, .search-bar {
   display: flex;
@@ -364,7 +367,16 @@ h2 {
 .sort-order-toggle .sort-icon {
   font-size: 18px; /* Small icon size */
 }
+.bulk-action-buttons button {
+  margin-right: 10px;
+}
 
-
-
+.bulk-action-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bulk-action-toggle {
+  margin-left: 10px;
+}
 
